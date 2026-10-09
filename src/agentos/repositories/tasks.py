@@ -7,8 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from agentos.db.models import Agent, AuditEvent, Execution, Task
+from agentos.db.models import Agent, AuditEvent, Execution, OutboxMessage, Task
 from agentos.domain.errors import IdempotencyConflict, NotFound
+from agentos.domain.state_machine import Transition, transition
 from agentos.hashing import hash_payload
 
 
@@ -44,16 +45,31 @@ class TaskRepository:
             payload_hash=digest,
             priority=priority,
             input=task_input,
-            status="queued",
+            status="pending",
         )
         self._session.add(task)
         await self._session.flush()
+        execution = Execution(
+            task_id=task.id,
+            attempt=1,
+            status="pending",
+            fencing_token=0,
+        )
+        self._session.add(execution)
+        await self._session.flush()
+        queued = transition(execution.status, Transition.COMMIT_OUTBOX)
+        execution.status = queued
+        task.status = queued
         self._session.add(
-            Execution(
-                task_id=task.id,
-                attempt=1,
-                status="queued",
-                fencing_token=0,
+            OutboxMessage(
+                aggregate_type="execution",
+                aggregate_id=execution.id,
+                event_type="execution.queued",
+                payload={
+                    "execution_id": str(execution.id),
+                    "task_id": str(task.id),
+                    "organization_id": str(organization_id),
+                },
             )
         )
         self._session.add(
