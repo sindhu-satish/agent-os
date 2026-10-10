@@ -15,3 +15,19 @@ class IdempotencyConflict(AgentOSError):
 
 class LostLease(AgentOSError):
     """The worker no longer owns the execution fence."""
+
+
+class ToolError(AgentOSError):
+    """A tool call was rejected or failed."""
+
+
+class ToolValidationError(ToolError):
+    """Tool arguments did not match the JSON Schema."""
+
+
+class ToolPermissionError(ToolError):
+    """The agent is not allowed to run this tool."""
+
+
+class ToolTimeoutError(ToolError):
+    """The tool did not finish inside its timeout."""
