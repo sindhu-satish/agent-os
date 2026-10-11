@@ -40,7 +40,7 @@ def test_json_formatter_redacts_message() -> None:
 
 @pytest.mark.asyncio
 async def test_health_is_ok() -> None:
-    app = create_app(_settings(), database_checker=_ready(True))
+    app = create_app(_settings(), database_checker=_ready(True), connect_database=False)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/health")
     assert response.status_code == 200
@@ -49,7 +49,7 @@ async def test_health_is_ok() -> None:
 
 @pytest.mark.asyncio
 async def test_ready_reports_database_failure() -> None:
-    app = create_app(_settings(), database_checker=_ready(False))
+    app = create_app(_settings(), database_checker=_ready(False), connect_database=False)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/ready")
     assert response.status_code == 503
@@ -57,7 +57,7 @@ async def test_ready_reports_database_failure() -> None:
 
 @pytest.mark.asyncio
 async def test_ready_succeeds_when_database_check_passes() -> None:
-    app = create_app(_settings(), database_checker=_ready(True))
+    app = create_app(_settings(), database_checker=_ready(True), connect_database=False)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/ready")
     assert response.status_code == 200
