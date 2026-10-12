@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Start Postgres and NATS
+        run: docker compose up -d postgres nats
+
+      - name: Wait for dependencies
+        run: |
+          for _ in $(seq 1 30); do
+            docker compose exec -T postgres pg_isready -U agentos -d agentos && break
+            sleep 2
+          done
+          docker compose exec -T postgres pg_isready -U agentos -d agentos
+          for _ in $(seq 1 30); do
+            if (echo > /dev/tcp/127.0.0.1/4222) >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "NATS did not accept connections" >&2
+          exit 1
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Lint
+        run: uv run ruff check src tests examples
+
+      - name: Type check
+        run: uv run mypy src
+
+      - name: Test
+        run: uv run pytest
