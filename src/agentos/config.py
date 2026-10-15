@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     worker_id: str = "worker-1"
     lease_seconds: int = 30
     heartbeat_seconds: int = 5
+    cors_origins: str = "http://127.0.0.1:5173,http://localhost:5173"
+    enable_demo_routes: bool = True
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        """Parsed CORS origins from the comma-separated setting."""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @field_validator("database_url")
     @classmethod

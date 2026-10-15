@@ -27,6 +27,12 @@ def test_defaults_and_sync_database_url(monkeypatch: pytest.MonkeyPatch) -> None
     assert settings.lease_seconds == 30
     assert settings.heartbeat_seconds == 5
     assert settings.bootstrap_api_key is None
+    assert settings.cors_origins == "http://127.0.0.1:5173,http://localhost:5173"
+    assert settings.cors_origin_list == [
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    ]
+    assert settings.enable_demo_routes is True
     assert (
         settings.sync_database_url == "postgresql+psycopg://agentos:agentos@localhost:5432/agentos"
     )

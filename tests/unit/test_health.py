@@ -64,6 +64,21 @@ async def test_ready_succeeds_when_database_check_passes() -> None:
     assert response.json() == {"status": "ready"}
 
 
+@pytest.mark.asyncio
+async def test_cors_allows_configured_origin() -> None:
+    app = create_app(_settings(), database_checker=_ready(True), connect_database=False)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.options(
+            "/health",
+            headers={
+                "Origin": "http://127.0.0.1:5173",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:5173"
+
+
 def _ready(value: bool):
     async def checker(_database_url: str) -> bool:
         return value

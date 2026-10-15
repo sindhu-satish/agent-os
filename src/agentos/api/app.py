@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agentos.api.bootstrap import bootstrap_api_key
@@ -45,6 +46,13 @@ def create_app(
     app = FastAPI(title="AgentOS", version="0.1.0", lifespan=lifespan)
     app.state.settings = resolved
     app.state.session_factory = factory
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=resolved.cors_origin_list,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 
     @app.get("/health")
     async def health() -> dict[str, str]:
