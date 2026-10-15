@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agentos.api.bootstrap import bootstrap_api_key
 from agentos.api.routes.agents import router as agents_router
+from agentos.api.routes.demo import router as demo_router
 from agentos.api.routes.tasks import router as tasks_router
 from agentos.config import Settings, get_settings
 from agentos.db.seed import ensure_builtin_tools
@@ -67,4 +68,6 @@ def create_app(
     if connect_database:
         app.include_router(agents_router)
         app.include_router(tasks_router)
+        if resolved.enable_demo_routes:
+            app.include_router(demo_router)
     return app

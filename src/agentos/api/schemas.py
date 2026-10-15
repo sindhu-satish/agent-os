@@ -65,3 +65,11 @@ class ExecutionResponse(BaseModel):
     result: dict[str, Any] | None
     error: str | None
     steps: list[StepResponse]
+
+
+class CreateDemoRecoveryRequest(BaseModel):
+    agent_id: UUID
+
+
+class DemoRecoveryResponse(BaseModel):
+    execution_id: UUID

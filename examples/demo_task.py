@@ -8,19 +8,15 @@ The bootstrap key is AGENTOS_BOOTSTRAP_API_KEY, defaulting to local-dev-key.
 """
 
 import asyncio
-import json
 import os
 import uuid
-from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from agentos.db.models import Agent, Checkpoint, ExecutionStep, Task, WorkerLease
+from agentos.db.models import Agent
 from agentos.db.session import create_engine, create_session_factory
-from agentos.providers.base import ModelResult, ToolCall
-from agentos.repositories.tasks import TaskRepository
+from agentos.demo.recovery import seed_expired_lease_recovery
 
 API_URL = os.environ.get("AGENTOS_API_URL", "http://127.0.0.1:8000")
 DATABASE_URL = os.environ.get(
@@ -117,97 +113,14 @@ async def _seed_expired_lease(agent_id: str) -> str:
             agent = await session.get(Agent, uuid.UUID(agent_id))
             if agent is None:
                 raise SystemExit("agent not found in the database")
-            task = await TaskRepository(session).insert(
+            execution_id = await seed_expired_lease_recovery(
+                session,
                 agent.organization_id,
                 agent.id,
-                f"demo-crash-{uuid.uuid4().hex[:8]}",
-                {"text": "add 2 and 3"},
-                actor="demo",
             )
-            execution = await TaskRepository(session).latest_execution(
-                agent.organization_id,
-                task.id,
-            )
-            if execution is None:
-                raise SystemExit("task has no execution")
-            execution.status = "running"
-            execution.fencing_token = 1
-            stored_task = await session.get(Task, task.id)
-            if stored_task is None:
-                raise SystemExit("task disappeared")
-            stored_task.status = "running"
-            _add_crashed_history(session, execution.id)
-            return str(execution.id)
+            return str(execution_id)
     finally:
         await engine.dispose()
-
-
-def _add_crashed_history(session: AsyncSession, execution_id: uuid.UUID) -> None:
-    now = datetime.now(UTC)
-    model_output = ModelResult(
-        tool_calls=[ToolCall(name="add", arguments={"a": 2, "b": 3})],
-        input_tokens=12,
-        output_tokens=8,
-    ).model_dump()
-    session.add(
-        ExecutionStep(
-            execution_id=execution_id,
-            sequence=0,
-            kind="model",
-            status="succeeded",
-            name="add",
-            input={},
-            output=model_output,
-            started_at=now,
-            finished_at=now,
-        )
-    )
-    session.add(
-        ExecutionStep(
-            execution_id=execution_id,
-            sequence=1,
-            kind="tool",
-            status="succeeded",
-            name="add",
-            input={"a": 2, "b": 3},
-            output={"result": 5},
-            started_at=now,
-            finished_at=now,
-        )
-    )
-    session.add(
-        Checkpoint(
-            execution_id=execution_id,
-            step_sequence=2,
-            state={
-                "messages": [
-                    {"role": "user", "content": "add 2 and 3"},
-                    {
-                        "role": "assistant",
-                        "content": "",
-                        "tool_calls": [{"name": "add", "arguments": {"a": 2, "b": 3}}],
-                    },
-                    {"role": "tool", "name": "add", "content": json.dumps({"result": 5})},
-                ],
-                "next_sequence": 2,
-                "pending_tool_calls": [],
-                "iterations": 1,
-                "input_tokens": 12,
-                "output_tokens": 8,
-                "cost_micros": 0,
-            },
-        )
-    )
-    session.add(
-        WorkerLease(
-            execution_id=execution_id,
-            worker_id="demo-crashed-worker",
-            fencing_token=1,
-            leased_at=now - timedelta(seconds=60),
-            heartbeat_at=now - timedelta(seconds=60),
-            expires_at=now - timedelta(seconds=30),
-        )
-    )
 
 
 if __name__ == "__main__":
