@@ -1,0 +1,104 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap");
+@import "tailwindcss";
+
+:root {
+  --black-1: #000000;
+  --black-2: rgba(0, 0, 0, 0.95);
+  --black-3: rgba(0, 0, 0, 0.8);
+  --black-4: rgba(0, 0, 0, 0.64);
+  --black-5: rgba(0, 0, 0, 0.48);
+  --black-6: rgba(0, 0, 0, 0.36);
+  --black-7: rgba(0, 0, 0, 0.28);
+  --black-8: rgba(0, 0, 0, 0.2);
+  --black-9: rgba(0, 0, 0, 0.16);
+  --black-10: rgba(0, 0, 0, 0.12);
+  --black-11: rgba(0, 0, 0, 0.08);
+  --black-12: rgba(0, 0, 0, 0.05);
+  --black-13: rgba(0, 0, 0, 0.025);
+
+  --beige-1: #e7ddc0;
+  --beige-2: #f1e8da;
+  --beige-3: #f7f1e5;
+  --beige-4: #faf5ed;
+  --beige-5: #fcfbf7;
+
+  --cta: #ff395c;
+
+  --bitter-dark: #279052;
+  --bitter-mid: #9edd9c;
+  --bitter-light: #d6efbf;
+  --mint-dark: #43a291;
+  --mint-mid: #92d6c5;
+  --mint-light: #d2f4ec;
+  --mineral-dark: #526db2;
+  --mineral-mid: #8d9ffb;
+  --mineral-light: #d6dfff;
+  --sweet-dark: #e72051;
+  --sweet-mid: #f7a3ab;
+  --sweet-light: #ffd5d9;
+  --sour-dark: #ff6933;
+  --sour-mid: #fbd06a;
+  --sour-light: #ffefb6;
+  --almond-dark: #a37557;
+  --almond-mid: #d6b38c;
+  --almond-light: #f2e0c8;
+  --olive-dark: #a09335;
+  --olive-mid: #d6d162;
+  --olive-light: #f2eca7;
+  --umami-dark: #531d56;
+  --umami-mid: #cc5e92;
+  --umami-light: #ffd5ed;
+  --salty-dark: #5031a4;
+  --salty-mid: #917df4;
+  --salty-light: #ecc4ff;
+  --citrus-dark: #eea00e;
+  --citrus-mid: #ffd65b;
+  --citrus-light: #fff2b4;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@theme {
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+  --color-cta: var(--cta);
+  --color-beige-1: var(--beige-1);
+  --color-beige-2: var(--beige-2);
+  --color-beige-3: var(--beige-3);
+  --color-beige-4: var(--beige-4);
+  --color-beige-5: var(--beige-5);
+  --color-ink: var(--black-1);
+  --color-ink-muted: var(--black-4);
+  --color-line: var(--black-10);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--black-1);
+  background-color: var(--beige-5);
+  font-family: var(--font-body);
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(231, 221, 192, 0.55), transparent 42%),
+    radial-gradient(circle at 88% 8%, rgba(210, 244, 236, 0.35), transparent 36%),
+    linear-gradient(180deg, var(--beige-5), var(--beige-4));
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
