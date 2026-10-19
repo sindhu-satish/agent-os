@@ -1,12 +1,25 @@
+import { useState } from "react";
+
+import { clearSession, loadSession, saveSession, type Session } from "./api";
+import { ConnectScreen } from "./ConnectScreen";
+import { Workspace } from "./Workspace";
+
 export default function App() {
-  return (
-    <main className="min-h-screen px-6 py-16">
-      <p className="font-[family-name:var(--font-display)] text-5xl tracking-tight text-[var(--black-1)]">
-        AgentOS
-      </p>
-      <p className="mt-3 max-w-md text-lg text-[var(--black-4)]">
-        Local runtime dashboard scaffold. Connect screen comes next.
-      </p>
-    </main>
-  );
+  const [session, setSession] = useState<Session | null>(() => loadSession());
+
+  function handleConnect(next: Session) {
+    saveSession(next);
+    setSession(next);
+  }
+
+  function handleDisconnect() {
+    clearSession();
+    setSession(null);
+  }
+
+  if (!session) {
+    return <ConnectScreen onConnect={handleConnect} />;
+  }
+
+  return <Workspace session={session} onDisconnect={handleDisconnect} />;
 }
