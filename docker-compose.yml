@@ -31,6 +31,8 @@ services:
       AGENTOS_NATS_URL: nats://nats:4222
       AGENTOS_LOG_LEVEL: INFO
       AGENTOS_BOOTSTRAP_API_KEY: local-dev-key
+      AGENTOS_CORS_ORIGINS: http://127.0.0.1:5173,http://localhost:5173
+      AGENTOS_ENABLE_DEMO_ROUTES: "true"
     ports:
       - "8000:8000"
     depends_on:
@@ -59,6 +61,16 @@ services:
       AGENTOS_WORKER_ID: worker-1
       AGENTOS_LEASE_SECONDS: 30
       AGENTOS_HEARTBEAT_SECONDS: 5
+    depends_on:
+      api:
+        condition: service_healthy
+
+  dashboard:
+    build: ./dashboard
+    environment:
+      VITE_API_PROXY: http://api:8000
+    ports:
+      - "5173:5173"
     depends_on:
       api:
         condition: service_healthy
