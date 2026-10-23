@@ -42,6 +42,8 @@ pgvector retrieval over `memory_entries`, retention, agent version rollback, and
 
 A non-root tool sandbox with no host mounts and no Docker socket. A React dashboard for agents, timelines, and failures. A load generator. [benchmarks.md](benchmarks.md) receives measured numbers only after a run.
 
+Pulled forward after Milestone 1: a local Vite/React dashboard (agents, task submit, execution timeline, crash-recovery button) plus gated `POST /v1/demo/recoveries`. Sandbox isolation, load generator, and measured benchmarks remain in this milestone.
+
 ## Milestone 5: Optional research
 
 Multi-agent messages, human approval gates, execution replay, and autoscaling. These stay out of the tree until that milestone starts.

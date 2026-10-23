@@ -19,7 +19,7 @@ flowchart LR
 
 ## Stack
 
-Python 3.12, FastAPI, Pydantic, SQLAlchemy, Alembic, PostgreSQL, NATS JetStream. Redis, OpenTelemetry, Prometheus, Grafana, pgvector, and the React dashboard are later milestones.
+Python 3.12, FastAPI, Pydantic, SQLAlchemy, Alembic, PostgreSQL, NATS JetStream, and a Vite/React dashboard for local demos. Redis, OpenTelemetry, Prometheus, Grafana, and pgvector are later milestones.
 
 ## Local setup
 
@@ -31,7 +31,17 @@ make install
 docker compose up --build
 ```
 
-The API listens on `http://127.0.0.1:8000`. Compose sets `AGENTOS_BOOTSTRAP_API_KEY` to `local-dev-key` and runs migrations before Uvicorn starts. `make up` starts only Postgres and NATS, which is enough for the test suite.
+The API listens on `http://127.0.0.1:8000`. The dashboard is at `http://127.0.0.1:5173`. Compose sets `AGENTOS_BOOTSTRAP_API_KEY` to `local-dev-key` and runs migrations before Uvicorn starts. `make up` starts only Postgres and NATS, which is enough for the test suite.
+
+## Dashboard demo
+
+1. Open `http://127.0.0.1:5173`.
+2. Leave the API base URL empty (the Vite proxy talks to the API) and use API key `local-dev-key`.
+3. Create an agent with the `add` tool.
+4. Submit `add 2 and 3` and watch the execution timeline until the result is `5`.
+5. Click **Simulate crash recovery** to seed an expired lease; the worker should finish with result `5` and a single tool step.
+
+`POST /v1/demo/recoveries` is gated by `AGENTOS_ENABLE_DEMO_ROUTES` (on in Compose). Turn it off outside local demos.
 
 ## Usage
 
@@ -64,6 +74,7 @@ All `/v1` routes require `Authorization: Bearer <api key>`.
 - `POST /v1/agents`, `GET /v1/agents`, `GET /v1/agents/{id}`
 - `POST /v1/tasks`, `GET /v1/tasks/{id}`, `POST /v1/tasks/{id}/cancel`
 - `GET /v1/executions/{id}` returns the execution and its steps
+- `POST /v1/demo/recoveries` seeds an expired-lease execution when demo routes are enabled
 
 Task input is a JSON object. The scripted provider reads `input.text`. Milestone 1 accepts `model_provider: scripted` only.
 
