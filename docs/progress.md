@@ -36,6 +36,7 @@ Status: complete for the local demo UI.
 - `749ac77` `feat: add dashboard API client and connect screen`
 - `dca42c7` `feat: add agents, execution workspace, and crash-recovery action`
 - `1eb3983` `chore: serve dashboard from Docker Compose`
+- `47d8dbb` `docs: document the local dashboard demo`
 
 ### Next feature
 
