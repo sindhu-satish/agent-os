@@ -2,7 +2,13 @@ import asyncio
 
 import pytest
 
-from agentos.db.seed import ADD_SCHEMA, ECHO_SCHEMA
+from agentos.db.seed import (
+    ADD_SCHEMA,
+    CONCAT_SCHEMA,
+    ECHO_SCHEMA,
+    LOOKUP_SCHEMA,
+    MULTIPLY_SCHEMA,
+)
 from agentos.domain.errors import ToolPermissionError, ToolTimeoutError, ToolValidationError
 from agentos.tools.gateway import ToolGateway, ToolSpec
 
@@ -11,16 +17,26 @@ def _specs() -> dict[str, ToolSpec]:
     return {
         "echo": ToolSpec("echo", "echo", ECHO_SCHEMA, 2000),
         "add": ToolSpec("add", "add", ADD_SCHEMA, 2000),
+        "multiply": ToolSpec("multiply", "multiply", MULTIPLY_SCHEMA, 2000),
+        "concat": ToolSpec("concat", "concat", CONCAT_SCHEMA, 2000),
+        "lookup": ToolSpec("lookup", "lookup", LOOKUP_SCHEMA, 2000),
     }
 
 
 @pytest.mark.asyncio
-async def test_echo_and_add_succeed() -> None:
+async def test_builtin_tools_succeed() -> None:
     gateway = ToolGateway(_specs())
     echo = await gateway.execute("echo", {"message": "hello"})
     added = await gateway.execute("add", {"a": 2, "b": 3})
+    multiplied = await gateway.execute("multiply", {"a": 4, "b": 5})
+    joined = await gateway.execute("concat", {"left": "Hello, ", "right": "Ada"})
+    fact = await gateway.execute("lookup", {"topic": "capital of france"})
     assert echo == {"message": "hello"}
     assert added == {"result": 5}
+    assert multiplied == {"result": 20}
+    assert joined == {"message": "Hello, Ada"}
+    assert fact["found"] is True
+    assert fact["fact"] == "Paris"
 
 
 @pytest.mark.asyncio

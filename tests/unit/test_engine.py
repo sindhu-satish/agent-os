@@ -94,10 +94,66 @@ async def test_scripted_provider_requests_add_then_answers() -> None:
     )
     assert first.tool_calls[0].arguments == {"a": 2, "b": 3}
     second = await provider.complete(
-        [{"role": "tool", "content": json.dumps({"result": 5})}],
+        [
+            {"role": "user", "content": "please add 2 and 3"},
+            {"role": "tool", "content": json.dumps({"result": 5})},
+        ],
         ["add"],
     )
     assert second.text == "5"
+
+
+@pytest.mark.asyncio
+async def test_scripted_provider_chains_add_then_multiply() -> None:
+    provider = ScriptedProvider()
+    first = await provider.complete(
+        [{"role": "user", "content": "add 2 and 3 then multiply by 4"}],
+        ["add", "multiply"],
+    )
+    assert first.tool_calls[0].name == "add"
+    second = await provider.complete(
+        [
+            {"role": "user", "content": "add 2 and 3 then multiply by 4"},
+            {"role": "tool", "name": "add", "content": json.dumps({"result": 5})},
+        ],
+        ["add", "multiply"],
+    )
+    assert second.tool_calls[0].name == "multiply"
+    assert second.tool_calls[0].arguments == {"a": 5, "b": 4}
+    third = await provider.complete(
+        [
+            {"role": "user", "content": "add 2 and 3 then multiply by 4"},
+            {"role": "tool", "name": "add", "content": json.dumps({"result": 5})},
+            {"role": "tool", "name": "multiply", "content": json.dumps({"result": 20})},
+        ],
+        ["add", "multiply"],
+    )
+    assert third.text == "20"
+
+
+@pytest.mark.asyncio
+async def test_scripted_provider_research_then_notes() -> None:
+    provider = ScriptedProvider()
+    first = await provider.complete(
+        [{"role": "user", "content": "research capital of france and note it"}],
+        ["lookup", "echo"],
+    )
+    assert first.tool_calls[0].name == "lookup"
+    second = await provider.complete(
+        [
+            {"role": "user", "content": "research capital of france and note it"},
+            {
+                "role": "tool",
+                "name": "lookup",
+                "content": json.dumps(
+                    {"found": True, "topic": "capital of france", "fact": "Paris"}
+                ),
+            },
+        ],
+        ["lookup", "echo"],
+    )
+    assert second.tool_calls[0].name == "echo"
+    assert second.tool_calls[0].arguments == {"message": "Note: Paris"}
 
 
 @pytest.mark.asyncio

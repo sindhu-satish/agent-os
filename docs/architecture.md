@@ -75,9 +75,9 @@ Milestone 1 has no separate scheduler process. The worker claims the oldest high
 
 ## Model and tool boundary
 
-`ModelProvider.complete` is the only model interface. The scripted provider returns a deterministic tool call for inputs such as `add 2 and 3`, then a final answer after the tool result. No network call and no provider key are required.
+`ModelProvider.complete` is the only model interface. The scripted provider returns deterministic tool calls for local demo prompts (including multi-step chains such as add-then-multiply), then a final answer after the last tool result. No network call and no provider key are required.
 
-Tools are an allowlist of in-process handlers (`echo`, `add`). The gateway validates arguments against the tool JSON Schema, checks `tool_permissions` for the agent version, and applies an asyncio timeout. Handlers do not receive a shell or a host filesystem path.
+Tools are an allowlist of in-process handlers (`echo`, `add`, `multiply`, `concat`, `lookup`). The gateway validates arguments against the tool JSON Schema, checks `tool_permissions` for the agent version, and applies an asyncio timeout. Handlers do not receive a shell or a host filesystem path.
 
 ## Security boundary
 

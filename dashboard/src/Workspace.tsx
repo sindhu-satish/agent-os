@@ -12,6 +12,7 @@ import {
   type Execution,
   type Session,
 } from "./api";
+import { AGENT_PRESETS, type AgentPreset } from "./presets";
 import { isTerminal, statusChipStyle, stepKindStyle } from "./statusStyles";
 
 type Props = {
@@ -19,11 +20,16 @@ type Props = {
   onDisconnect: () => void;
 };
 
+const TOOL_OPTIONS = ["add", "multiply", "echo", "concat", "lookup"] as const;
+
 export function Workspace({ session, onDisconnect }: Props) {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [name, setName] = useState("Calculator");
   const [slug, setSlug] = useState(`calc-${crypto.randomUUID().slice(0, 8)}`);
+  const [toolNames, setToolNames] = useState<string[]>(["add"]);
+  const [systemPrompt, setSystemPrompt] = useState("Add numbers with the add tool.");
+  const [description, setDescription] = useState("Single-tool arithmetic with add.");
   const [taskText, setTaskText] = useState("add 2 and 3");
   const [taskId, setTaskId] = useState<string | null>(null);
   const [executionId, setExecutionId] = useState<string | null>(null);
@@ -80,21 +86,64 @@ export function Workspace({ session, onDisconnect }: Props) {
     };
   }, [executionId, session]);
 
+  function applyPreset(preset: AgentPreset) {
+    setName(preset.name);
+    setSlug(`${preset.slugPrefix}-${crypto.randomUUID().slice(0, 8)}`);
+    setToolNames([...preset.toolNames]);
+    setSystemPrompt(preset.systemPrompt);
+    setDescription(preset.description);
+    setTaskText(preset.sampleTask);
+  }
+
+  function toggleTool(tool: string) {
+    setToolNames((current) =>
+      current.includes(tool) ? current.filter((name) => name !== tool) : [...current, tool],
+    );
+  }
+
   async function handleCreateAgent(event: FormEvent) {
     event.preventDefault();
+    if (toolNames.length === 0) {
+      setError("Select at least one tool");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
       const agent = await createAgent(session, {
         name: name.trim(),
         slug: slug.trim(),
-        tool_names: ["add"],
+        tool_names: toolNames,
+        description: description.trim(),
+        system_prompt: systemPrompt.trim(),
       });
       await refreshAgents();
       setSelectedId(agent.id);
-      setSlug(`calc-${crypto.randomUUID().slice(0, 8)}`);
+      setSlug(`${slug.split("-")[0] ?? "agent"}-${crypto.randomUUID().slice(0, 8)}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not create agent");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCreatePreset(preset: AgentPreset) {
+    setBusy(true);
+    setError(null);
+    applyPreset(preset);
+    try {
+      const agent = await createAgent(session, {
+        name: preset.name,
+        slug: `${preset.slugPrefix}-${crypto.randomUUID().slice(0, 8)}`,
+        tool_names: preset.toolNames,
+        description: preset.description,
+        system_prompt: preset.systemPrompt,
+      });
+      await refreshAgents();
+      setSelectedId(agent.id);
+      setTaskText(preset.sampleTask);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not create preset agent");
     } finally {
       setBusy(false);
     }
@@ -176,8 +225,37 @@ export function Workspace({ session, onDisconnect }: Props) {
         </button>
       </header>
 
-      <div className="mx-auto mt-8 grid max-w-6xl gap-8 lg:grid-cols-[280px_1fr]">
+      <div className="mx-auto mt-8 grid max-w-6xl gap-8 lg:grid-cols-[320px_1fr]">
         <section className="space-y-6">
+          <div className="border border-[var(--black-10)] bg-[var(--beige-4)]">
+            <h2 className="border-b border-[var(--black-10)] px-4 py-3 text-sm font-semibold uppercase tracking-wide text-[var(--black-4)]">
+              Example agents
+            </h2>
+            <ul className="divide-y divide-[var(--black-11)]">
+              {AGENT_PRESETS.map((preset) => (
+                <li key={preset.id} className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{preset.name}</p>
+                      <p className="mt-1 text-xs text-[var(--black-5)]">{preset.blurb}</p>
+                      <p className="mt-1 font-[family-name:var(--font-mono)] text-[11px] text-[var(--black-5)]">
+                        {preset.toolNames.join(", ")}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void handleCreatePreset(preset)}
+                      className="shrink-0 border border-[var(--cta)] bg-[var(--beige-5)] px-2 py-1 text-xs font-semibold text-[var(--cta)] disabled:opacity-50"
+                    >
+                      Use
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <form
             onSubmit={handleCreateAgent}
             className="space-y-3 border border-[var(--black-10)] bg-[var(--beige-4)] p-4"
@@ -199,7 +277,26 @@ export function Workspace({ session, onDisconnect }: Props) {
               placeholder="slug"
               required
             />
-            <p className="text-xs text-[var(--black-5)]">Tools: add · provider: scripted</p>
+            <div className="flex flex-wrap gap-2">
+              {TOOL_OPTIONS.map((tool) => {
+                const active = toolNames.includes(tool);
+                return (
+                  <button
+                    key={tool}
+                    type="button"
+                    onClick={() => toggleTool(tool)}
+                    className={`px-2 py-1 font-[family-name:var(--font-mono)] text-xs ${
+                      active
+                        ? "bg-[var(--cta)] text-white"
+                        : "border border-[var(--black-10)] bg-[var(--beige-5)] text-[var(--black-3)]"
+                    }`}
+                  >
+                    {tool}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-[var(--black-5)]">provider: scripted</p>
             <button
               type="submit"
               disabled={busy}

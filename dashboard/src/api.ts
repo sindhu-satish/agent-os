@@ -120,15 +120,22 @@ export function listAgents(session: Session): Promise<Agent[]> {
 
 export function createAgent(
   session: Session,
-  body: { name: string; slug: string; tool_names: string[] },
+  body: {
+    name: string;
+    slug: string;
+    tool_names: string[];
+    description?: string;
+    system_prompt?: string;
+  },
 ): Promise<Agent> {
   return request(session, "/v1/agents", {
     method: "POST",
     body: JSON.stringify({
       name: body.name,
       slug: body.slug,
+      description: body.description ?? "",
       tool_names: body.tool_names,
-      system_prompt: "Add numbers.",
+      system_prompt: body.system_prompt ?? "",
     }),
   });
 }

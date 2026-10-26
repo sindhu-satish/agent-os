@@ -37,9 +37,11 @@ The API listens on `http://127.0.0.1:8000`. The dashboard is at `http://127.0.0.
 
 1. Open `http://127.0.0.1:5173`.
 2. Leave the API base URL empty (the Vite proxy talks to the API) and use API key `local-dev-key`.
-3. Create an agent with the `add` tool.
-4. Submit `add 2 and 3` and watch the execution timeline until the result is `5`.
-5. Click **Simulate crash recovery** to seed an expired lease; the worker should finish with result `5` and a single tool step.
+3. Under **Example agents**, click **Use** on Math pipeline or Research noter (or create a Calculator with `add`).
+4. Submit the prefilled sample task and watch the execution timeline. Pipeline should end at `20` with two tool steps; research ends at `Note: Paris`.
+5. Click **Simulate crash recovery** on a calculator-style agent to seed an expired lease; the worker should finish with result `5` and a single tool step.
+
+More prompts are listed in [examples/example_agents.md](examples/example_agents.md).
 
 `POST /v1/demo/recoveries` is gated by `AGENTOS_ENABLE_DEMO_ROUTES` (on in Compose). Turn it off outside local demos.
 

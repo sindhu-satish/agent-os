@@ -4,7 +4,7 @@
 
 Delivery and execution are at-least-once. The window is a crash after a tool handler has performed work and before the `succeeded` step row commits. Recovery retries a step left in `running`. A step already marked `succeeded` is not run again.
 
-Milestone 1 tools (`echo`, `add`) are pure, so a retry returns the same result. This does not extend to a future tool that charges a card or sends an email unless that tool dedupes on execution id and step sequence.
+Builtin tools (`echo`, `add`, `multiply`, `concat`, `lookup`) are pure, so a retry returns the same result. This does not extend to a future tool that charges a card or sends an email unless that tool dedupes on execution id and step sequence.
 
 The outbox can publish the same wake-up more than once if the process dies after JetStream accepts the message and before `published_at` is stored. The claim ignores that duplicate.
 
@@ -30,4 +30,4 @@ There are no traces, metrics dashboards, or semantic memory queries. Checkpoints
 
 ## Model coverage
 
-Only the scripted provider runs in Milestone 1. It recognizes `add <number> and <number>` and otherwise echoes the user text. It does not call an external model.
+Only the scripted provider runs in Milestone 1. It recognizes patterns such as `add …`, `multiply …`, `add … then multiply by …`, `say …`, `greet …`, `lookup …`, and `research … and note it`. Other text is returned as the final answer without a tool call. It does not call an external model.
